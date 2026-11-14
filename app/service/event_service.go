@@ -33,6 +33,29 @@ func (s *EventService) CreateEvent(ctx context.Context, req *model.CreateEventRe
 	return toEventResponse(event), nil
 }
 
+func (s *EventService) GetAllEvents(ctx context.Context) ([]model.EventResponse, error) {
+	events, err := s.eventRepository.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	responses := make([]model.EventResponse, 0, len(events))
+	for i := range events {
+		responses = append(responses, *toEventResponse(&events[i]))
+	}
+
+	return responses, nil
+}
+
+func (s *EventService) GetEventByID(ctx context.Context, id int64) (*model.EventResponse, error) {
+	event, err := s.eventRepository.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return toEventResponse(event), nil
+}
+
 func toEventResponse(event *model.Event) *model.EventResponse {
 	return &model.EventResponse{
 		ID:          event.ID,
