@@ -4,8 +4,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 )
+
+const AppName = "EventHub"
 
 type Config struct {
 	AppPort string
@@ -41,6 +46,21 @@ func Load() *Config {
 		JWTSecret:      getEnv("JWT_SECRET", ""),
 		JWTExpireHours: getEnv("JWT_EXPIRE_HOURS", "24"),
 	}
+}
+
+func NewApp() *fiber.App {
+	app := fiber.New(fiber.Config{
+		AppName: AppName,
+	})
+
+	app.Use(recover.New())
+	app.Use(logger.New())
+
+	return app
+}
+
+func (c *Config) ServerAddr() string {
+	return ":" + c.AppPort
 }
 
 func getEnv(key, fallback string) string {
