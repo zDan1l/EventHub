@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"eventhub/app/model"
 	"eventhub/app/repository"
@@ -16,6 +18,10 @@ func NewEventService(eventRepository repository.EventRepository) *EventService {
 }
 
 func (s *EventService) CreateEvent(ctx context.Context, req *model.CreateEventRequest) (*model.EventResponse, error) {
+	if err := validateEventInput(req.Title, req.Quota); err != nil {
+		return nil, err
+	}
+
 	event := &model.Event{
 		Title:       req.Title,
 		Description: req.Description,
@@ -57,6 +63,10 @@ func (s *EventService) GetEventByID(ctx context.Context, id int64) (*model.Event
 }
 
 func (s *EventService) UpdateEvent(ctx context.Context, id int64, req *model.UpdateEventRequest) (*model.EventResponse, error) {
+	if err := validateEventInput(req.Title, req.Quota); err != nil {
+		return nil, err
+	}
+
 	event, err := s.eventRepository.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -79,6 +89,18 @@ func (s *EventService) UpdateEvent(ctx context.Context, id int64, req *model.Upd
 
 func (s *EventService) DeleteEvent(ctx context.Context, id int64) error {
 	return s.eventRepository.Delete(ctx, id)
+}
+
+func validateEventInput(title string, quota int) error {
+	if strings.TrimSpace(title) == "" {
+		return errors.New("judul event wajib diisi")
+	}
+
+	if quota <= 0 {
+		return errors.New("kuota event harus lebih dari 0")
+	}
+
+	return nil
 }
 
 func toEventResponse(event *model.Event) *model.EventResponse {
