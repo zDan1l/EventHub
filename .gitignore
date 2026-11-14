@@ -1,1 +1,22 @@
 .code-review-graph
+
+# Environment (jangan commit .env asli)
+.env
+.env.local
+
+# Catatan task internal
+tasks.txt
+
+# Go build
+*.exe
+*.exe~
+*.out
+*.test
+/bin/
+/tmp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
