@@ -56,6 +56,31 @@ func (s *EventService) GetEventByID(ctx context.Context, id int64) (*model.Event
 	return toEventResponse(event), nil
 }
 
+func (s *EventService) UpdateEvent(ctx context.Context, id int64, req *model.UpdateEventRequest) (*model.EventResponse, error) {
+	event, err := s.eventRepository.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	event.Title = req.Title
+	event.Description = req.Description
+	event.Location = req.Location
+	event.StartTime = req.StartTime
+	event.EndTime = req.EndTime
+	event.Quota = req.Quota
+	event.IsActive = req.IsActive
+
+	if err := s.eventRepository.Update(ctx, event); err != nil {
+		return nil, err
+	}
+
+	return toEventResponse(event), nil
+}
+
+func (s *EventService) DeleteEvent(ctx context.Context, id int64) error {
+	return s.eventRepository.Delete(ctx, id)
+}
+
 func toEventResponse(event *model.Event) *model.EventResponse {
 	return &model.EventResponse{
 		ID:          event.ID,
