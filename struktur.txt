@@ -1,0 +1,72 @@
+├── main.go                      # Composition root: setup DB/app, pilih role api|worker|all
+├── worker.go                    # Composition root worker: outbox relay + Asynq server
+│
+├── app/                         # ==== CORE (domain + application) ====
+│   ├── model/                   # [Domain] Entity & DTO request/response
+│   │   ├── user.go
+│   │   ├── auth.go
+│   │   ├── student.go
+│   │   ├── course.go
+│   │   ├── comment.go
+│   │   ├── portfolio.go
+│   │   ├── review.go
+│   │   └── notification.go
+│   │
+│   ├── repository/              # [Interface Adapter / Data Access]
+│   │   ├── common.go            #   error sentinel bersama (ErrNotFound, ErrDuplicate)
+│   │   ├── tx.go                #   DBTX + TxManager (transaction & retry)
+│   │   ├── user_repository.go
+│   │   ├── token_repository.go
+│   │   ├── role_repository.go
+│   │   ├── student_repository.go
+│   │   ├── course_repository.go    # interface + impl PostgreSQL
+│   │   ├── comment_repository.go
+│   │   ├── portfolio_repository.go # impl MongoDB
+│   │   ├── review_repository.go    # impl MongoDB
+│   │   ├── notification_repository.go
+│   │   └── outbox_repository.go
+│   │
+│   └── service/                 # [Application / Use Case + Handler]
+│       ├── auth_service.go          # register/login/refresh/logout/me
+│       ├── student_handler.go       # CRUD student
+│       ├── portfolio_handler.go     # portofolio student
+│       ├── comment_handler.go       # komentar + ownership check
+│       ├── course_service.go        # KRS: enroll/drop/swap + outbox
+│       ├── course_rules.go          # business rule (batas SKS) + test
+│       ├── review_service.go        # ulasan kelas + rule + test
+│       ├── notification_service.go  # baca notifikasi & monitor queue
+│       ├── notification_worker.go   # worker Asynq "notification:send"
+│       ├── notification_rules.go    # rule notifikasi + test
+│       ├── outbox_relay.go          # outbox -> Redis (async)
+│       └── fakes_test.go
+│
+├── route/route.go               # [Adapter] Endpoint + injeksi dependency (Dependencies)
+│
+├── middleware/                  # [Adapter] HTTP middleware
+│   ├── middleware.go            #   recover, CORS, request logger
+│   ├── auth.go                  #   RequireAuth (JWT)
+│   └── authorize.go             #   RequirePermission / RequireAllowed (RBAC)
+│
+├── helper/                      # [Cross-cutting / infra helpers]
+│   ├── errors.go                #   AppError + constructor error
+│   ├── response.go              #   WebResponse / envelope
+│   ├── jwt.go                   #   JWTManager
+│   ├── permission.go            #   PermissionSet
+│   ├── mailer.go                #   Mailer (log mailer)
+│   ├── validator.go
+│   ├── cursor.go                #   cursor pagination
+│   ├── negotiate.go             #   JSON/CSV negotiation
+│   ├── request.go / request_id.go / security.go
+│   └── (response & error mapping)
+│
+├── config/                      # [Frameworks & Drivers]
+│   ├── config.go                #   env, logger, NewApp (Fiber) + ErrorHandler
+│   └── queue.go                 #   RedisOpt, NewWorkerServer (Asynq)
+│
+├── database/                    # [Frameworks & Drivers] koneksi
+│   ├── postgres.go              #   pgxpool
+│   
+│
+├── migrations/                  # [DB] skema 001..010 (.sql & .js)
+├── tests/integration/           # integration test (API, concurrency)
+└── docs/                        # swagger generated (swag init)
