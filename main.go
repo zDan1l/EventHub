@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"eventhub/app/service"
 	"eventhub/config"
 	"eventhub/database"
 	"eventhub/route"
@@ -17,9 +18,14 @@ func main() {
 	}
 	defer db.Close()
 
-	app := config.NewApp()
+	// -- Wiring: repository -> service -> route --
+	// note: menunggu pool, repository, dan service
+	eventRepository := repository.NewEventRepository(pool)
+	deps := route.Dependencies{
+		EventService: service.NewEventService(eventRepository),
+	}
 
-	route.Setup(app)
+	app := config.NewApp(deps)
 
 	if err := app.Listen(cfg.ServerAddr()); err != nil {
 		log.Fatalf("server berhenti: %v", err)

@@ -1,9 +1,12 @@
 package config
 
 import (
+	"errors"
 	"log"
 	"os"
 
+	"eventhub/helper"
+	"eventhub/route"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -48,15 +51,38 @@ func Load() *Config {
 	}
 }
 
-func NewApp() *fiber.App {
+func NewApp(deps route.Dependencies) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName: AppName,
+		AppName:      AppName,
+		ErrorHandler: errorHandler,
 	})
 
 	app.Use(recover.New())
 	app.Use(logger.New())
 
+	route.Setup(app, deps)
+
+	app.Use(func(c *fiber.Ctx) error {
+		return helper.NotFound("No endpoints found")
+	})
+
 	return app
+}
+
+func errorHandler(c *fiber.Ctx, err error) error {
+	var appErr *helper.AppError
+	if errors.As(err, &appErr) {
+		resp := helper.WebResponse{Success: false, Message: appErr.Message}
+		if appErr.Fields != nil {
+			resp.Errors = appErr.Fields
+		}
+		return c.Status(appErr.Status).JSON(resp)
+	}
+
+	return c.Status(fiber.StatusInternalServerError).JSON(helper.WebResponse{
+		Success: false,
+		Message: "Internal server error",
+	})
 }
 
 func (c *Config) ServerAddr() string {
