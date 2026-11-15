@@ -53,7 +53,7 @@ func (s *EventService) GetAllEvents(ctx context.Context) ([]model.EventResponse,
 	return responses, nil
 }
 
-func (s *EventService) GetEventByID(ctx context.Context, id int64) (*model.EventResponse, error) {
+func (s *EventService) GetEventByID(ctx context.Context, id int) (*model.EventResponse, error) {
 	event, err := s.eventRepository.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (s *EventService) GetEventByID(ctx context.Context, id int64) (*model.Event
 	return toEventResponse(event), nil
 }
 
-func (s *EventService) UpdateEvent(ctx context.Context, id int64, req *model.UpdateEventRequest) (*model.EventResponse, error) {
-	if err := validateEventInput(req.Title, req.Quota); err != nil {
+func (s *EventService) UpdateEvent(ctx context.Context, id int, req *model.UpdateEventRequest) (*model.EventResponse, error) {
+	if err := validateEventUpdate(req); err != nil {
 		return nil, err
 	}
 
@@ -72,13 +72,27 @@ func (s *EventService) UpdateEvent(ctx context.Context, id int64, req *model.Upd
 		return nil, err
 	}
 
-	event.Title = req.Title
-	event.Description = req.Description
-	event.Location = req.Location
-	event.StartTime = req.StartTime
-	event.EndTime = req.EndTime
-	event.Quota = req.Quota
-	event.IsActive = req.IsActive
+	if req.Title != nil {
+		event.Title = *req.Title
+	}
+	if req.Description != nil {
+		event.Description = *req.Description
+	}
+	if req.Location != nil {
+		event.Location = *req.Location
+	}
+	if req.StartTime != nil {
+		event.StartTime = *req.StartTime
+	}
+	if req.EndTime != nil {
+		event.EndTime = *req.EndTime
+	}
+	if req.Quota != nil {
+		event.Quota = *req.Quota
+	}
+	if req.IsActive != nil {
+		event.IsActive = *req.IsActive
+	}
 
 	if err := s.eventRepository.Update(ctx, event); err != nil {
 		return nil, err
@@ -87,7 +101,7 @@ func (s *EventService) UpdateEvent(ctx context.Context, id int64, req *model.Upd
 	return toEventResponse(event), nil
 }
 
-func (s *EventService) DeleteEvent(ctx context.Context, id int64) error {
+func (s *EventService) DeleteEvent(ctx context.Context, id int) error {
 	return s.eventRepository.Delete(ctx, id)
 }
 
@@ -97,6 +111,18 @@ func validateEventInput(title string, quota int) error {
 	}
 
 	if quota <= 0 {
+		return errors.New("kuota event harus lebih dari 0")
+	}
+
+	return nil
+}
+
+func validateEventUpdate(req *model.UpdateEventRequest) error {
+	if req.Title != nil && strings.TrimSpace(*req.Title) == "" {
+		return errors.New("judul event wajib diisi")
+	}
+
+	if req.Quota != nil && *req.Quota <= 0 {
 		return errors.New("kuota event harus lebih dari 0")
 	}
 
