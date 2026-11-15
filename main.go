@@ -17,9 +17,10 @@ func main() {
 	}
 	defer db.Close()
 
-	app := config.NewApp()
+	// -- Wiring: repository -> service -> route --
+	deps := route.Dependencies{}
 
-	route.Setup(app)
+	app := config.NewApp(deps)
 
 	if err := app.Listen(cfg.ServerAddr()); err != nil {
 		log.Fatalf("server berhenti: %v", err)
