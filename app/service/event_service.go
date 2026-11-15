@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"eventhub/app/model"
 	"eventhub/app/repository"
+	"eventhub/helper"
 )
 
 type EventService struct {
@@ -106,24 +106,36 @@ func (s *EventService) DeleteEvent(ctx context.Context, id int) error {
 }
 
 func validateEventInput(title string, quota int) error {
+	fields := map[string]string{}
+
 	if strings.TrimSpace(title) == "" {
-		return errors.New("judul event wajib diisi")
+		fields["title"] = "judul event wajib diisi"
 	}
 
 	if quota <= 0 {
-		return errors.New("kuota event harus lebih dari 0")
+		fields["quota"] = "kuota event harus lebih dari 0"
+	}
+
+	if len(fields) > 0 {
+		return helper.Validation(fields)
 	}
 
 	return nil
 }
 
 func validateEventUpdate(req *model.UpdateEventRequest) error {
+	fields := map[string]string{}
+
 	if req.Title != nil && strings.TrimSpace(*req.Title) == "" {
-		return errors.New("judul event wajib diisi")
+		fields["title"] = "judul event wajib diisi"
 	}
 
 	if req.Quota != nil && *req.Quota <= 0 {
-		return errors.New("kuota event harus lebih dari 0")
+		fields["quota"] = "kuota event harus lebih dari 0"
+	}
+
+	if len(fields) > 0 {
+		return helper.Validation(fields)
 	}
 
 	return nil
