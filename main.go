@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"eventhub/app/service"
 	"eventhub/config"
 	"eventhub/database"
 	"eventhub/route"
@@ -18,7 +19,11 @@ func main() {
 	defer db.Close()
 
 	// -- Wiring: repository -> service -> route --
-	deps := route.Dependencies{}
+	// note: menunggu pool, repository, dan service
+	eventRepository := repository.NewEventRepository(pool)
+	deps := route.Dependencies{
+		EventService: service.NewEventService(eventRepository),
+	}
 
 	app := config.NewApp(deps)
 

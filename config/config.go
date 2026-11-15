@@ -79,7 +79,7 @@ func errorHandler(c *fiber.Ctx, err error) error {
 		return c.Status(appErr.Status).JSON(resp)
 	}
 
-	return c.Status(fiber.StatusInternalServerError).JSON(WebResponse{
+	return c.Status(fiber.StatusInternalServerError).JSON(helper.WebResponse{
 		Success: false,
 		Message: "Internal server error",
 	})
