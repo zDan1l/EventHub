@@ -24,7 +24,7 @@ type CreateEventRequest struct {
 	IsActive    bool      `json:"is_active"`
 }
 
-type PatchEventRequest struct {
+type UpdateEventRequest struct {
 	Title       *string    `json:"title"`
 	Description *string    `json:"description"`
 	Location    *string    `json:"location"`
