@@ -22,6 +22,10 @@ type eventRepository struct {
 	db *pgxpool.Pool
 }
 
+func NewEventRepository(db *pgxpool.Pool) EventRepository {
+	return &eventRepository{db: db}
+}
+
 func (r *eventRepository) Create(ctx context.Context, event *model.Event) error {
 	query := `
 		INSERT INTO events (title, description, location, start_time, end_time, quota, is_active)
@@ -104,4 +108,45 @@ func (r *eventRepository) GetByID(ctx context.Context, id int) (*model.Event, er
 	}
 
 	return &event, nil
+}
+
+func (r *eventRepository) Update(ctx context.Context, event *model.Event) error {
+	query := `
+		UPDATE events
+		SET title = $1, description = $2, location = $3, start_time = $4, end_time = $5, quota = $6, is_active = $7
+		WHERE id = $8
+	`
+	result, err := r.db.Exec(ctx, query,
+		event.Title,
+		event.Description,
+		event.Location,
+		event.StartTime,
+		event.EndTime,
+		event.Quota,
+		event.IsActive,
+		event.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (r *eventRepository) Delete(ctx context.Context, id int) error {
+	query := `DELETE FROM events WHERE id = $1`
+	result, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
