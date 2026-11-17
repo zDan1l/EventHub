@@ -15,8 +15,9 @@ services:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - eventhub_pgdata:/var/lib/postgresql/data
-      # Migrasi awal akan dijalankan oleh aplikasi; folder ini opsional untuk seed manual.
-      # - ./migrations:/docker-entrypoint-initdb.d
+      # Dijalankan otomatis HANYA saat volume masih baru (initdb).
+      # Jika volume sudah pernah dibuat: docker compose down -v lalu up lagi.
+      - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-eventhub} -d ${DB_NAME:-eventhub}"]
       interval: 10s
